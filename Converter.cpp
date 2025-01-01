@@ -1,38 +1,58 @@
 #include "pch.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 
 #include "Converter.h"
 #include <stdexcept>
+#include <jpeglib.h>
+#include <vector>
 
-Inspectis::Converter::Converter(const std::vector<std::byte>& blob) : m_blob(blob)
+Inspectis::Converter::Converter(const std::vector<std::byte> blob) : m_blob(blob)
 {
 }
 
 Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata()
 {
 	BlobMetadata metadata;
-	int width, height, channels;
+	
+	struct jpeg_decompress_struct cinfo;
+	struct jpeg_error_mgr jerr;
 
-	// Decode the blob data to get metadata
-	const unsigned char* blobData = reinterpret_cast<const unsigned char*>(m_blob.data());
-	unsigned char* pixelData = stbi_load_from_memory(blobData, static_cast<int>(m_blob.size()),
-		&width, &height, &channels, 0);
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_CreateDecompress(&cinfo, JPEG_LIB_VERSION, sizeof(jpeg_decompress_struct));
 
-	if (!pixelData) {
-		// Handle decoding failure
-		throw std::runtime_error("Failed to decode image blob: " + std::string(stbi_failure_reason()));
+	try
+	{
+		jpeg_mem_src(&cinfo, reinterpret_cast<const unsigned char*>(m_blob.data()), m_blob.size());
+		if (jpeg_read_header(&cinfo, TRUE) != JPEG_HEADER_OK) {
+			throw std::runtime_error("Failed to read JPEG header.");
+		}
+		// Start decompression
+		jpeg_start_decompress(&cinfo);
+
+		// Retrieve image dimensions and channels
+		metadata.width = cinfo.output_width;
+		metadata.height = cinfo.output_height;
+		metadata.channels = cinfo.output_components;
+
+		// Allocate buffer for uncompressed data
+		size_t dataSize = metadata.width * metadata.height * metadata.channels;
+		metadata.pixelData.resize(dataSize);
+
+		// Read scanlines
+		unsigned char* buffer = metadata.pixelData.data();
+		while (cinfo.output_scanline < cinfo.output_height) {
+			unsigned char* rowPointer[1] = { buffer + cinfo.output_scanline * metadata.width * metadata.channels };
+			jpeg_read_scanlines(&cinfo, rowPointer, 1);
+		}
+
+		// Finish decompression
+		jpeg_finish_decompress(&cinfo);
+		jpeg_destroy_decompress(&cinfo);
+		}
+	catch (const std::exception&)
+	{
+		jpeg_destroy_decompress(&cinfo);
+		throw; // Rethrow the exception after cleanup
 	}
 
-	// Populate metadata structure
-	metadata.row = height;
-	metadata.column = width;
-	metadata.channels = channels;
-
-	// Free the pixel data as we only need metadata
-	stbi_image_free(pixelData);
-
-	
 	return metadata;
 }

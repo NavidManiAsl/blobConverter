@@ -12,15 +12,16 @@ namespace Inspectis
 {
 	struct BlobMetadata
 	{
-		int row = 0;
-		int	column = 0;
+		int height = 0;
+		int	width = 0;
 		int channels = 0;
+		std::vector<unsigned char> pixelData;
 	};
 	
 	class Converter
 	{
 	public:
-		Converter(const std::vector<std::byte>& blob);
+		Converter(const std::vector<std::byte> blob);
 		BlobMetadata getBlobMetadata();
 	
 	private:
