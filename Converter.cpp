@@ -35,14 +35,18 @@ Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata()
 
 		// Allocate buffer for uncompressed data
 		size_t dataSize = metadata.width * metadata.height * metadata.channels;
-		metadata.pixelData.resize(dataSize);
+		std::vector<unsigned char> data;
+		data.resize(dataSize);
 
 		// Read scanlines
-		unsigned char* buffer = metadata.pixelData.data();
+		unsigned char* buffer = data.data();
 		while (cinfo.output_scanline < cinfo.output_height) {
 			unsigned char* rowPointer[1] = { buffer + cinfo.output_scanline * metadata.width * metadata.channels };
 			jpeg_read_scanlines(&cinfo, rowPointer, 1);
 		}
+		
+		std::transform(data.begin(), data.end(), metadata.pixelData.begin(),
+			[](unsigned char c) { return static_cast<std::byte>(c); });
 
 		// Finish decompression
 		jpeg_finish_decompress(&cinfo);

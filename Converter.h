@@ -15,7 +15,7 @@ namespace Inspectis
 		int height = 0;
 		int	width = 0;
 		int channels = 0;
-		std::vector<unsigned char> pixelData;
+		std::vector<std::byte> pixelData;
 	};
 	
 	class Converter
