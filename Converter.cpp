@@ -44,7 +44,7 @@ Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata()
 			unsigned char* rowPointer[1] = { buffer + cinfo.output_scanline * metadata.width * metadata.channels };
 			jpeg_read_scanlines(&cinfo, rowPointer, 1);
 		}
-		
+		metadata.pixelData.resize(dataSize);
 		std::transform(data.begin(), data.end(), metadata.pixelData.begin(),
 			[](unsigned char c) { return static_cast<std::byte>(c); });
 

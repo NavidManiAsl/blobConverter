@@ -28,4 +28,4 @@ namespace Inspectis
 		const std::vector<std::byte> m_blob;
 	
 	};
-}
+}//namespace Inspectis
