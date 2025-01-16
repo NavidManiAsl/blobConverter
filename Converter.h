@@ -21,11 +21,10 @@ namespace Inspectis
 	class Converter
 	{
 	public:
-		Converter(const std::vector<std::byte> blob);
-		BlobMetadata getBlobMetadata();
+		Converter()=default;
+		static BlobMetadata getBlobMetadata(std::vector<std::byte>);
 	
-	private:
-		const std::vector<std::byte> m_blob;
+	
 	
 	};
 }//namespace Inspectis

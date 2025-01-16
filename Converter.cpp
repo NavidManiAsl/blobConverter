@@ -5,11 +5,8 @@
 #include <jpeglib.h>
 #include <vector>
 
-Inspectis::Converter::Converter(const std::vector<std::byte> blob) : m_blob(blob)
-{
-}
 
-Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata()
+ Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata(std::vector<std::byte> byteVector)
 {
 	BlobMetadata metadata;
 	
@@ -21,7 +18,7 @@ Inspectis::BlobMetadata Inspectis::Converter::getBlobMetadata()
 
 	try
 	{
-		jpeg_mem_src(&cinfo, reinterpret_cast<const unsigned char*>(m_blob.data()), m_blob.size());
+		jpeg_mem_src(&cinfo, reinterpret_cast<const unsigned char*>(byteVector.data()), byteVector.size());
 		if (jpeg_read_header(&cinfo, TRUE) != JPEG_HEADER_OK) {
 			throw std::runtime_error("Failed to read JPEG header.");
 		}
